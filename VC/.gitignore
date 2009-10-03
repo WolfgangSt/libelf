@@ -1,0 +1,6 @@
+Release
+Debug
+check.c
+libelf.vcproj.*
+*.suo
+*.ncb
