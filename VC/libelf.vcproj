@@ -419,6 +419,16 @@
 						Outputs="$(ProjectDir)check.c;$(ProjectDir)..\lib\config.h;$(ProjectDir)..\lib\sys_elf.h"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Configuring"
+						CommandLine="$(ProjectDir)prebuild.bat"
+						Outputs="$(ProjectDir)check.c;$(ProjectDir)..\lib\config.h;$(ProjectDir)..\lib\sys_elf.h"
+					/>
+				</FileConfiguration>
 			</File>
 		</Filter>
 	</Files>
