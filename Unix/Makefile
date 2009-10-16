@@ -1,14 +1,20 @@
-PROJECT=$(shell pwd)
+ifeq ($(origin SOLUTION_DIR), undefined)
+	SOLUTION_DIR := $(shell pwd)/
+endif
+PROJECT_DIR_LIBELF:=$(dir $(lastword $(MAKEFILE_LIST)))
 
-../config.h:
-	cd .. && ./configure
+$(PROJECT_DIR_LIBELF)/../config.h:
+	cd $(PROJECT_DIR_LIBELF)/.. && ./configure
 
-clean:
-	rm ../config.h
-	rm libelf.so*
+clean::
+	rm -f $(PROJECT_DIR_LIBELF)/../config.h
+	rm -f libelf.so*
+	rm -f libelf
 
-test: ../config.h
-	cd .. && make
-	cp ../lib/libelf.so* .
-	cd .. && make clean
+libelf : $(PROJECT_DIR_LIBELF)/../config.h
+	cd $(PROJECT_DIR_LIBELF)/.. && make
+	cp $(PROJECT_DIR_LIBELF)/../lib/libelf.so* .
+	cd $(PROJECT_DIR_LIBELF)/.. && make -i clean
+	touch libelf
+
 
