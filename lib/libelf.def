@@ -79,4 +79,5 @@ EXPORTS
 	elf_getphnum
 	elf_getshnum
 	elf_getshstrndx
+	elf_getshdrstrndx
 	elfx_update_shstrndx
